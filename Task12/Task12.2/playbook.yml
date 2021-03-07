@@ -1,0 +1,51 @@
+---
+- name: Deploying HTTPD Servers
+  hosts: tag_Name_Ansible_WebServer
+  tasks:
+       - name: install httpd
+         package:
+                name: "httpd"
+                state: present
+
+       - name: copy content
+         copy:
+                content: "Arth Task12.2 Successfully completed\n, Hello from {{ ansible_hostname }}({{ ansible_default_ipv4['address'] }})"
+                dest: /var/www/html/index.html
+         notify: restart service
+
+       - name: service httpd start
+         service:
+                name: "httpd"
+                state: started
+                enabled: yes
+
+  handlers:
+          - name: restart service
+            service:
+                    name: "httpd"
+                    state: "restarted"
+
+- name: Deploying HaProxy Server
+  hosts: tag_Name_Ansible_LoadBalancer
+  tasks:
+         - name: "Installing Haproxy"
+           package:
+                name: "haproxy"
+                state: present
+         - name: Copying Configuration file
+           template:
+                src: "haproxy.j2"
+                dest: "/etc/haproxy/haproxy.cfg"
+           notify: "restart service"
+
+         - name: Starting the Service
+           service:
+                name: "haproxy"
+                state: started
+                enabled: yes
+
+  handlers:
+         - name: "restart service"
+           service:
+                name: "haproxy"
+                state: restarted
