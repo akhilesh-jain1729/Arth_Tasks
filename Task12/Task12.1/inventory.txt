@@ -1,0 +1,7 @@
+[lb]
+ansiblemn1
+
+[lb_slaves]
+ansiblemn2
+ansiblemn3
+ansiblemn4
