@@ -1,0 +1,62 @@
+---
+- name: Httpd Server
+  hosts: lb_slaves
+  become: yes
+  vars:
+     pkg: httpd
+  tasks:
+     - name: "Installing {{ pkg }} Server"
+       yum:
+               name: "{{ pkg }}"
+               state: present
+
+     - name: "Webpage Content"
+       copy:
+               content: "Hello From {{ ansible_default_ipv4['address'] }}"
+               dest: /var/www/html/index.html
+       notify: web_restart
+
+
+     - name: "Starting Service"
+       service:
+               name: "{{ pkg }}"
+               state: started
+
+  handlers:
+     - name: web_restart
+       service:
+                name: "{{ pkg }}"
+                state: restarted
+
+- name: HaProxy Server
+  hosts: lb
+  become: yes
+  vars:
+          pkg: haproxy
+  tasks:
+          - name: "Installing {{ pkg }} Package"
+            package:
+                name: "{{ pkg }}"
+                state: present
+
+          - name: "Updating Conf file"
+            template:
+                src: "haproxy.cfg"
+                dest: "/etc/haproxy/haproxy.cfg"
+            notify: restart_lb
+
+          - name: "Starting Service"
+            service:
+                    name: "{{ pkg }}"
+                    state: started
+
+          - name: "Printing IP"
+            debug:
+                msg: "This is the IP of Your Load Balancer {{ ansible_default_ipv4['address'] }}"        
+  handlers:
+          - name: restart_lb
+            service:
+                    name: "{{ pkg }}"
+                    state: restarted
+
+
