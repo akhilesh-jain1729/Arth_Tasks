@@ -1,0 +1,21 @@
+// Amazon Linux 2 AMI
+	ami-068d43a544160b7ef
+
+//Instance Type
+	t2.micro
+
+//Number of Instances to Launch
+	1
+
+// Subnet ID
+	subnet-609ca608
+
+//Security Group
+	sg-2a5e1e48
+
+// VPC-id
+	vpc-224d514a
+
+//Path of File
+	F:/STUDY/PRACTICE/python vimal sir/Arth-task-6
+
