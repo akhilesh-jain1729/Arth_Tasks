@@ -10,8 +10,9 @@ print("Configure AWS")
 os.system('aws configure')
 
 def key_pair():
-		key = input('Enter key name you want to create')
-		os.system('aws ec2 create-key-pair --key-name {}'.format(key))
+		key = input('Enter key name you want to create: ')
+		os.system('aws ec2 create-key-pair --key-name {} --query "KeyMaterial" --output text > {}.pem '.format(key,key))
+		os.system('winscp.com /keygen {}.pem /output={}.ppk'.format(key,key))
 
 def ec2():
 		while True:
@@ -45,13 +46,13 @@ def ec2():
 			elif i==10:
 				menu()
 			else:
-				os.system("hadoop dfsadmin -report")  
+				print("Re-enter choice")  
 def s3():
 		while True:
 			print("\n \n")
 			print("""
 			Press 1: creating_s3_bucket
-			Press 2: updating_content_to_s3
+			Press 2: uploading_content_to_s3
 			Press 3: updating_put_acl_policy
 			Press 4: delete_bucket
 			Press 5: delete_object_from_bucket
@@ -78,7 +79,8 @@ def s3():
 			elif i==10:
 				menu()
 			else:
-				os.system("hadoop dfsadmin -report")  
+				print("Re-enter choice")
+				  
 	 
 def ebs():
 		while True:
@@ -112,7 +114,7 @@ def ebs():
 			elif i==10:
 				menu()
 			else:
-				os.system("hadoop dfsadmin -report")   
+				print("Re-enter choice")   
 
 def sg():
 		while True:
@@ -148,7 +150,7 @@ def sg():
 			elif i==10:
 				exit()
 			else:
-				os.system("hadoop dfsadmin -report")   
+				print("Re-enter choice")   
 
 
 def launching_ec2():
@@ -158,7 +160,9 @@ def launching_ec2():
 		s = input('Enter subnet-ID: ')
 		sg = input('Enter security-group: ')
 		k = input('Enter key name: ')
-		os.system('aws ec2 run-instances --image-id {} --instance-type {} --count {} --subnet-id {} --security-group-ids {} --key-name {}'.format(a,i,c,s,sg,k))
+		tag = input('Enter name to give to your Instance: ')
+		os.system("aws ec2 run-instances --image-id {} --instance-type {} --count {} --subnet-id {} --security-group-ids  {} --key-name {} --tag-specifications ResourceType=instance,Tags=[{{Key='Name',Value={}}}]".format(a,i,c,s,sg,k,tag))
+		
 
 def Describe_ec2():
 		os.system('aws ec2 describe-instances')
@@ -172,7 +176,7 @@ def stopping_ec2():
 		os.system('aws ec2 stop-instances --instance-ids {}'.format(a))
 
 def terminate_ec2():
-		a = input('Enter ami-id: ')
+		a = input('Enter Instance-id: ')
 		os.system('aws ec2 terminate-instances --instance-ids {}'.format(a))
 
 def Describe_ebs():
@@ -289,7 +293,7 @@ def menu():
 			elif i==10:
 				exit()
 			else:
-				os.system("hadoop dfsadmin -report")
+				print("Re-enter choice")
 
 
 while True:
@@ -325,4 +329,5 @@ while True:
 			elif i==10:
 				exit()
 			else:
+				print("Exiting....")
 				exit()  
