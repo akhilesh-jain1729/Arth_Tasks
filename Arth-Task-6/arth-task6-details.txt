@@ -1,3 +1,6 @@
+//These are the details given in my Task while Script was running.
+
+
 // Amazon Linux 2 AMI
 	ami-068d43a544160b7ef
 
@@ -8,13 +11,13 @@
 	1
 
 // Subnet ID
-	subnet-609ca608
+	subnet-xxxxxx
 
 //Security Group
-	sg-2a5e1e48
+	sg-2a5xxxxxx
 
 // VPC-id
-	vpc-224d514a
+	vpc-xxxxxxx
 
 //Path of File
 	F:/STUDY/PRACTICE/python vimal sir/Arth-task-6
