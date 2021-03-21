@@ -22,3 +22,7 @@
 //Path of File
 	F:/STUDY/PRACTICE/python vimal sir/Arth-task-6
 
+--> We have to use following commands to git clone:
+1.) yum install git httpd -y
+2.) git clone https://github.com/akhilesh-jain1729/integrated-webserver-using-terraform/blob/master/index.php /var/www/html
+3.) mount /dev/xvdf1 /var/www/html
