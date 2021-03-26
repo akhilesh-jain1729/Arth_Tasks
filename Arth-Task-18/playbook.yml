@@ -1,0 +1,55 @@
+---
+- name: Deploying HTTPD Servers 
+  hosts: tag_Name_ArthTask18
+  vars_files:
+          - vars.yml
+  tasks:
+       - name: Install Packages
+         yum:
+                name: 
+                    - "httpd"
+                    - "php-mysqlnd"
+                    - "php-fpm" 
+                    - "mariadb-server" 
+                    - "php-json"
+                    - "firewalld"
+                state: present
+
+       - name: 
+         get_url:
+                url: "{{ url_var }}"                              
+                dest: "/root/"
+               
+       - name: Extracting Wordpress Package
+         unarchive:
+                src: "/root/wordpress-5.7.tar.gz"
+                dest: "/root/"
+                remote_src: yes
+
+       - name: stop firewalld
+         service:
+                name: "firewalld"
+                state: stopped
+
+       - name: service httpd start
+         service:
+                name: "httpd"
+                state: started
+                enabled: yes
+
+       - name: Copying Extracted file to webserver default location
+         copy:
+                 src: "/root/wordpress"
+                 dest: "{{ dest_var }}"
+                 remote_src: yes
+                  
+       - name: Making Selinux Permissive
+         selinux:
+                 policy: targeted
+                 state: permissive 
+
+       - name: copy content
+         template:
+                src: "wp-config.j2"
+                dest: "{{ dest_var }}wordpress/wp-config.php"
+                force: true

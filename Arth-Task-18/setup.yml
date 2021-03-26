@@ -1,0 +1,57 @@
+---
+- name: "Creating 1 VM and some python libaries"
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+        - vault.yml
+  tasks:
+      - name: "installing boto"
+        pip:
+           name: "boto"
+           executable: pip3
+
+      - name: "installing boto3"
+        pip:
+           name: "boto3"
+           executable: pip3
+
+      - name: "creating security group"
+        ec2_group:
+           aws_access_key: "{{ ak }}"
+           aws_secret_key: "{{ sak }}"
+           name: 'launch-wizard-1'
+           description: 'sg with rule descriptions'
+           vpc_id: 'vpc-224d514a'
+           tags:
+               Name: "task18-sg"
+           region: "ap-south-1"
+           rules:
+             - proto: tcp
+               from_port: 22
+               to_port: 22
+               cidr_ip: 0.0.0.0/0
+               rule_desc: allow all on port 22 for ssh
+             - proto: tcp
+               cidr_ip: 0.0.0.0/0
+               ports:
+                 - 80
+               rule_desc: allow all on port 80 for webserver
+             - proto: all
+               from_port: 0
+               to_port: 0
+               cidr_ip: 0.0.0.0/0
+        
+      - name: "Creating Wordpress Instance"
+        ec2:
+                count: 1
+                image: "ami-0a9d27a9f4f5c0efc"
+                instance_type: t2.micro
+                region: "ap-south-1"
+                wait: yes
+                instance_tags:
+                        Name: ArthTask18
+                group: "launch-wizard-1"
+                key_name: "key123"
+                state: present
+                aws_access_key: "{{ ak }}"
+                aws_secret_key: "{{ sak }}" 
