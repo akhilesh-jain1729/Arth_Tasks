@@ -1,0 +1,2 @@
+[web2]
+ansiblemn2 ansible_ssh_user=root ansible_ssh_pass=1 ansible_connection=ssh
