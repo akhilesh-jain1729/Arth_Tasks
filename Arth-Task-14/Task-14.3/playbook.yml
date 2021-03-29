@@ -1,0 +1,32 @@
+- name: "Arth Task14.3"
+  hosts: all 
+  tasks:
+          
+   -  name: Getting OS_Name
+      include_vars: "{{ lookup('first_found', params) }}"
+      vars:
+         params:
+            files:
+              - "{{ansible_os_family}}OS_vars.yml"
+            name: 
+              - package
+              - svc_pkg    
+
+   -  name: Printing Variable Package
+      debug:
+         msg: "Package is  {{ package }} Software"
+
+   -  name: Printing Variable Package
+      debug:
+         msg: "Service is  {{ svc_pkg }} Service"
+
+   -  name: "Installing {{ package }} software"
+      package:
+         name: "{{ package }}"
+         state: present
+
+   -  name: "Starting {{ svc_pkg }} Service"
+      service:
+         name: "{{ svc_pkg }}"
+         state: started
+         enabled: true
