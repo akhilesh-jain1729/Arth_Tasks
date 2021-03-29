@@ -1,0 +1,120 @@
+-  name: docker_setup
+   hosts: localhost 
+   vars:
+         - os_name: myos
+         - web_port: 2629
+         - ssh_port: 9001
+         - image_name: sickp/centos-sshd
+   tasks:
+   -  name: Remove docker if installed from CentOS repo
+      yum:
+        name:
+         - docker
+         - docker-client
+         - docker-client-latest
+         - docker-common
+         - docker-latest
+         - docker-latest-logrotate
+         - docker-logrotate
+         - docker-engine
+        state: removed
+      register: remove
+
+   -  name: unwanted softwares removed successfully
+      debug:
+        var: remove.results
+
+   -  name: Install yum utils
+      yum:
+        name: yum-utils
+        state: latest
+
+   -  name: Install device-mapper-persistent-data
+      yum:
+        name: device-mapper-persistent-data
+        state: latest
+
+   -  name: Install lvm2
+      yum:
+        name: lvm2
+        state: latest
+
+   -  name: Creating docker repository
+      yum_repository:
+        name: docker
+        description: "Docker repo"
+        baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+        gpgcheck: 0
+
+   -  name: Giving --nobest. option for installing docker
+      replace:
+        path: "/etc/dnf/dnf.conf"
+        after: "best=" 
+        regexp: "True"
+        replace: False
+ 
+   -  name: Installing docker package
+      package:
+        name: "docker-ce"
+        state: present
+      register: docker
+
+   -  name: Starting docker service
+      service:
+        name: docker
+        state: started
+      register: d_service
+
+   -  name: docker-py installed
+      package:
+        name: python3
+        state: present
+
+   -  name: Installed package for docker module
+      pip:
+        name: docker-py
+        executable: pip3
+
+   -  name: docker installed successfully
+      debug:
+        var: docker
+
+   -  name: pull an image
+      docker_image:
+        name: "{{ image_name }}" 
+        source: pull
+
+   -  name: creating a centos container
+      docker_container:
+        name: "{{ os_name }}"
+        image: "{{ image_name }}"
+        state: started
+        tty: yes
+        detach: yes
+        ports:
+             - "{{ ssh_port }}:22"
+             - "{{ web_port }}:80"
+      register: container
+
+   -  name: register container
+      debug: 
+        var: container
+
+
+   -  name: Get infos on container
+      docker_container_info:
+        name: myos
+      register: result
+ 
+   -  name: retriving IP
+      debug:
+        var: result.container.NetworkSettings.IPAddress
+
+
+   -  name: Dynamically Add Docker Container IP in inventory
+      lineinfile:
+        path: "/playbooks/Arth_Task14/Arth_Task14.2/inventory.txt"
+        insertafter: "[docker]"
+        line: "{{ result.container.NetworkSettings.IPAddress }} ansible_ssh_user=root ansible_ssh_pass=root"
+        state: present
+      delegate_to: localhost
