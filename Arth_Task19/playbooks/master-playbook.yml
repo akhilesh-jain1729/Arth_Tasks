@@ -1,0 +1,170 @@
+-  name: "Configuring Master"
+   hosts: tag_Name_Master 
+   vars_files:
+        - vars.yml
+   ignore_errors: yes
+   tasks:
+        -  name: "Making Selinux Disabled"
+           selinux:
+               policy: targeted
+               state: disabled
+
+        -  name: Creating Docker Repo
+           yum_repository:
+               name: docker
+               baseurl: "{{ docker_repo_url }}"
+               description: "This is Docker Repo"
+               gpgcheck: no
+
+        -  name: "Giving --no-best Option"
+           replace:
+                path: "/etc/dnf/dnf.conf"
+                regexp: "True"
+                after: "best="
+                replace: "False"
+           when: ansible_distribution=='RedHat'
+                
+        -  name: "Installing Docker"
+           yum:
+                name: "{{ docker_pkg }}"
+                state: present
+                allow_downgrade: True 
+
+        -  name: "Starting Docker"
+           service:
+                name: "{{ docker_svc }}"
+                state: started
+                enabled: yes
+
+        -  name: "Creating Kubernetes Repo for Redhat"
+           yum_repository:
+                name: "kubernetes"
+                description: "Kubernetes repo"
+                baseurl: "{{ k8s_repo_url }}"
+                gpgkey: "{{ k8s_gpg_url }}"
+                enabled: True
+                gpgcheck: True
+                repo_gpgcheck: True
+                # exclude: kubectl kubeadm kubelet
+           register: repo
+           when: ansible_distribution=='RedHat'
+
+        -  name: "Creating Kubernetes Repo for Centos"
+           yum_repository:
+                name: "kubernetes"
+                description: "Kubernetes repo"
+                baseurl: "{{ k8s_repo_url }}"
+                enabled: True
+                gpgcheck: False
+                repo_gpgcheck: False
+           register: repo
+       
+        -  name: "Installing kubeadm, kubelet, kubectl"
+           yum: 
+                name: "{{ k8s_repo_pkg }}"
+                state: present
+           register: kubeadm
+
+        -  name: "Starting kubelet service"
+           service:
+                name: kubelet
+                state: started
+                enabled: True
+
+
+        -  name: "Pulling Images"
+           command:
+                cmd: "kubeadm config images pull"
+ 
+        #Resolving Warning-1 Part-1      
+        -  name: "Creating file in docker and in next task will be edited"
+           file:
+                path: "{{ docker_driver_path }}"
+                state: touch
+        
+        #Resolving Warning-1 Part-2         
+        -  name: "Changing docker driver to systemd"
+           copy: 
+                src: "./files/daemon.json"
+                dest: "{{ docker_driver_path }}"
+                force: yes
+                
+        -  name: "Restarting Docker Service"
+           service: 
+                name: "{{ docker_svc }}"
+                state: restarted
+
+        #Resolving Warning-2
+        -  name: "Installing {{ warning2_pkg }} package"
+           yum:
+                name: "{{ warning2_pkg }}"
+                state: present
+           when: ansible_distribution=='RedHat'
+
+
+        #Resolving SWAP Error
+        -  name: "Doing swap off"
+           command: "swapoff -a"
+           register: s
+
+        
+           #        -  name: "echoing 1"
+           #command: "echo 1 > bridge-nf-call-iptables"
+
+           # -  name: "echoing 1"
+          # command: " echo 1 > bridge-nf-call-ip6tables"
+
+           #       -  name:
+          #command: "sudo sysctl -p"
+
+
+        #Creating Containers and Configuring Master
+        -  name: "Start the Cluster"
+           command: "kubeadm init --pod-network-cidr={{ cidr_range }} --ignore-preflight-errors=NumCPU --ignore-preflight-errors=Mem"     
+           register: master_config                 
+        
+        -  name: debug
+           debug: 
+                msg: "{{ master_config }}"
+
+        -  name: Configuring Credentials
+           file:
+                path: "{{ k8s_dir_path }}"
+                state: directory
+                recurse: yes
+        
+        -  name: Copying admin.conf file
+           copy: 
+                src: "/etc/kubernetes/admin.conf"
+                dest: "{{ k8s_dir_path }}/config"
+                remote_src: yes
+        
+        -  name: "Creating Directory to store flannel yaml file"
+           file:
+                path: "/k8s"
+                state: directory
+
+        -  name: "Downloading FLannel"
+           get_url:
+                url: "{{ flannel_url }}"
+                dest: "/k8s/"
+           ignore_errors: yes
+
+        -  name: "Installing Flannel"
+           command: "kubectl apply -f kube-flannel.yml"
+           args:
+                chdir: /k8s/
+           ignore_errors: yes
+
+        -  name: "Creating Token for Slaves"
+           command: 
+                cmd: "kubeadm token create --print-join-command"
+           register: token_result
+
+        -  name: "Adding token to a File"
+           lineinfile:
+                insertafter: file_dest
+                line: "token: {{ token_result.stdout }}"  
+                dest: "{{ file_dest }}"
+                state: present
+           delegate_to: localhost

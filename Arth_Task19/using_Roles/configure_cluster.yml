@@ -1,0 +1,19 @@
+---
+-  name: Configuring Master
+   hosts: tag_Name_Master
+   ignore_errors: yes
+   # become: yes
+   vars_files:
+       - vars.yml
+   roles:
+       - master
+
+
+-  name: Configuring Slaves
+   hosts: tag_Name_Slaves
+   ignore_errors: yes
+   become: yes
+   vars_files:
+       - vars.yml
+   roles:
+       - slave

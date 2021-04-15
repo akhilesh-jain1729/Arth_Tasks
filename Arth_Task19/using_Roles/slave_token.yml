@@ -1,0 +1,7 @@
+-  name: Joining Slave to Master
+   hosts: tag_Name_Slaves
+   vars_files:
+          - vars.yml
+   tasks:
+          -  name: "Running Master's token to Slave Node"
+             command: "{{ token }}"

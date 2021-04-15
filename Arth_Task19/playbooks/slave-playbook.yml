@@ -1,0 +1,114 @@
+---
+-  name: "Configuring Slave"
+   hosts: tag_Name_Slaves
+   become: yes
+   ignore_errors: yes
+   vars_files:
+        - vars.yml
+   tasks:
+        -  name: "Making Selinux Disabled"
+           selinux:
+               policy: targeted
+               state: disabled 
+
+        -  name: Creating Docker Repo
+           yum_repository:
+               name: docker
+               baseurl: "{{ docker_repo_url }}"
+               description: "This is Docker Repo"
+               gpgcheck: no
+
+        -  name: "Giving --no-best Option for Redhat"
+           replace:
+                path: "/etc/dnf/dnf.conf"
+                regexp: True
+                after: "best="
+                replace: False
+           when: ansible_distribution=='RedHat'
+                
+        -  name: "Installing Docker"
+           yum:
+                name: "{{ docker_pkg }}"
+                state: present
+                allow_downgrade: True
+
+        -  name: "Starting Docker"
+           service:
+                name: "{{ docker_svc }}"
+                state: started
+                enabled: yes
+
+        -  name: "Creating Kubernetes Repo"
+           yum_repository:
+                name: "Kubernetes"
+                description: "This repo will install kubeadm, kubelet, kubectl"
+                baseurl: "{{ k8s_repo_url }}"
+                enabled: True
+                gpgcheck: False
+
+        -  name: "Installing kubeadm, kubelet, kubectl"
+           yum:
+                name: "{{ k8s_repo_pkg }}"
+                state: present
+
+        -  name: "Starting kubelet service"
+           service:
+                name: kubelet
+                state: started
+                enabled: True
+ 
+        #Resolving Warning-1 Part-1      
+        -  name: "Creating file in docker and in next task will be edited"
+           file:
+                path: "{{ docker_driver_path }}"
+                state: touch
+        
+        #Resolving Warning-1 Part-2         
+        -  name: "Changing docker driver to systemd"
+           copy: 
+                src: "./files/daemon.json"
+                dest: "{{ docker_driver_path }}"
+                force: yes
+                
+        -  name: "Restarting Docker Service"
+           service: 
+                name: "{{ docker_svc }}"
+                state: restarted
+
+        #Resolving Warning-2
+        -  name: "Installing {{ warning2_pkg }} package"
+           yum:
+                name: "{{ warning2_pkg }}"
+                state: present
+           when: ansible_distribution=='RedHat'
+
+               
+        #Resolving Warning-3
+        
+        -  name: Doing swap off
+           command: "swap off -a"
+           when: ansible_distribution=='RedHat'
+
+
+        -  name: "Copyting k8s.conf file"
+           copy: 
+                src: "./files/k8s.conf"
+                dest: "{{ k8s_conf_path }}"
+                force: yes
+
+        -  name: "running sysctl command"
+           command:
+               cmd: "sysctl --system"
+
+
+                # -  name: "echoing 1"
+                #    command: "echo 1 > bridge-nf-call-iptables"
+
+                # -  name: "echoing 1"
+                #        command: " echo 1 > bridge-nf-call-ip6tables"
+
+                #    -  name:
+                #     command: "sudo sysctl -p"
+
+        -  name: "Running Master's token to Slave Node"
+           shell: "{{ token }}"

@@ -1,0 +1,14 @@
+---
+-  name: Accessing Kubernetes Cluster Locally
+   hosts: localhost
+   tasks: 
+      -  name: Creating Directory
+         file: 
+            path: "/root/.kube/"
+            state: directory
+
+      -  name: Copying config file
+         copy: 
+            src: "./creds/config"
+            dest: "/root/.kube/config"
+            force: yes

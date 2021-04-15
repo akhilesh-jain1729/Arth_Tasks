@@ -1,0 +1,12 @@
+-  name: "Configuring Master"
+   hosts: tag_Name_Master
+   vars_files:
+        - vars.yml
+   tasks:     
+        -  name: "Creating pods"
+           command: "kubectl run tomcat --image tomcat:8.0" 
+           register: pod
+
+        -  name: debug
+           debug:
+                msg: "{{ pod }}"

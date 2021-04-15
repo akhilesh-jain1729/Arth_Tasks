@@ -1,0 +1,8 @@
+---
+-  name: "Deleting Kubernetes Cluster"
+   hosts: tag_Name_Master 
+   tasks:
+           -  name: Deleting using kubeadm
+              command: "kubeadm reset cleanup-node  --force"
+              changed_when: false
+              ignore_errors: yes

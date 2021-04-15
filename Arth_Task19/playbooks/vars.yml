@@ -1,0 +1,17 @@
+docker_repo_url: https://download.docker.com/linux/centos/7/x86_64/stable/
+docker_pkg: docker-ce-19.03.8-3.el7.x86_64
+docker_svc: docker
+k8s_repo_url: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+k8s_gpg_url: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+k8s_repo_pkg:
+        - kubeadm
+        - kubectl
+        - kubelet
+docker_driver_path: /etc/docker/daemon.json
+warning2_pkg: iproute-tc
+cidr_range: 10.240.0.0/16
+k8s_conf_path: /etc/sysctl.d/k8s.conf
+k8s_dir_path: $HOME/.kube
+flannel_url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+file_dest: ./vars.yml
+token: kubeadm join 172.31.1.71:6443 --token zphbb5.di7d6wcgro1r8g3b --discovery-token-ca-cert-hash sha256:19fb530cce466dbc9558501e4199ececab046a13b305be963e318039c8fe06cb 
